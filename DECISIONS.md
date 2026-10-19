@@ -1,0 +1,12 @@
+# Decisions and PM questions
+
+- **R1/R2 conflict:** strict atomic series rejects any clash; chosen policy skips clashes and atomically saves accepted dates. This violates literal R1. PM: confirm this interpretation and skipping more than two clashes; all-conflict requests save nothing (409).
+- **R3/C1:** keep naive local `start`/`end`; store separate UTC seconds and IANA timezone snapshots. Generate local-calendar weeks. Reject ambiguous/nonexistent endpoints for the entire request. PM: confirm this DST policy and real reporting schema.
+- **R5/C2:** actual room rows outrank the sequential-ID claim. Preserve `/rooms` exactly, with IDs 3/4/9/17. Assume Aurora/Basalt are Berlin and Cinder/Dune Denver; PM: confirm office mapping.
+- **Recurrence bounds:** seed weekday, weekly only, inclusive start-date cutoff, maximum 104 dates and 24 local hours per booking. Historic bookings allowed; seconds precision, no offsets. PM: confirm these limits and whether past creation should be restricted.
+- **Cancellation:** series action preserves past/ongoing meetings; cancels starts at/after one captured UTC instant. Explicit individual action cancels only that occurrence. Both are repeat-safe. PM: confirm the ongoing-meeting rule and who may cancel before release.
+- **Integrity:** file-backed SQLite, foreign keys, WAL, `BEGIN IMMEDIATE` around checks and writes; busy errors are 503, not clashes. Independent connections and injected SQLite/Python failures verify the boundaries. Single-host operation; no direct database writes supported.
+- **Compatibility and UI:** REST serves existing clients; Jinja2 and plain CSS/JS add the dashboard. Preview saves nothing and creation rechecks. Skipped details are returned immediately, not persisted as a permanent audit log.
+- **Duplicates:** no idempotency keys in this focused version; active duplicate intervals conflict. Never automatically retry mutations after uncertain network failures. PM: assess retry requirements before connecting unreliable clients.
+- **AI usage:** AI assisted with design, implementation, and tests. Browser testing exposed stale availability after a failed preview recheck; the issue was fixed and covered by a regression test.
+- **Omissions/next steps:** no authentication, editing, notifications, arbitrary RRULEs, or cloud deployment. Before shared use: access controls, backup/restore, migration planning, reporting-owner sign-off, and timezone-rule update policy.

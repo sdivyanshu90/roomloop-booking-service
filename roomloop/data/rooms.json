@@ -1,0 +1,6 @@
+[
+  {"id": 3, "name": "Aurora", "capacity": 8, "timezone": "Europe/Berlin"},
+  {"id": 4, "name": "Basalt", "capacity": 4, "timezone": "Europe/Berlin"},
+  {"id": 9, "name": "Cinder", "capacity": 12, "timezone": "America/Denver"},
+  {"id": 17, "name": "Dune", "capacity": 6, "timezone": "America/Denver"}
+]

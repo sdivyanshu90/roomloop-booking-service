@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Find a meeting room in Berlin or Denver. Book once, repeat weekly, and manage your series.">
+  <title>RoomLoop · Rooms & bookings</title>
+  <link rel="icon" href="{{ url_for('static', path='/favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', path='/dashboard.css') }}">
+  <script src="{{ url_for('static', path='/dashboard.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="RoomLoop home"><span class="brand-mark" aria-hidden="true">↔</span>roomloop<span class="brand-dot">.</span></a>
+    <nav aria-label="Main navigation"><a class="nav-current" href="#directory">Rooms & bookings</a><a href="#series-section">Recurring series</a><a href="/docs">API docs <span aria-hidden="true">↗</span></a></nav>
+    <span class="workspace"><span class="status-dot"></span> Our workspace</span>
+  </header>
+  <main id="main">
+    <section class="intro" aria-labelledby="page-title">
+      <div><p class="eyebrow">GOOD WORK STARTS WITH A LITTLE SPACE</p><h1 id="page-title">Room for your next idea.</h1><p class="intro-copy">Find your space. Bring your people. We’ll keep the time.</p></div>
+      <div class="office-note"><span class="globe" aria-hidden="true">◎</span><div><strong>Two offices. One shared calendar.</strong><span>Berlin & Denver · Times are always room-local</span></div></div>
+    </section>
+    <noscript><p class="notice error">Enable JavaScript to use the booking dashboard. The REST API is available at <a href="/docs">/docs</a>.</p></noscript>
+    <div id="page-feedback" role="status" aria-live="polite" hidden></div>
+    <div class="workspace-grid">
+      <div class="main-column">
+        <section id="directory" aria-labelledby="rooms-heading">
+          <div class="section-heading"><div><p class="eyebrow">01 / FIND YOUR SPACE</p><h2 id="rooms-heading">The room directory <span class="count">{{ rooms|length }}</span></h2></div>
+            <div class="office-filter" role="group" aria-label="Filter by office"><button type="button" class="active" data-office="all" aria-pressed="true">All offices</button><button type="button" data-office="Europe/Berlin" aria-pressed="false">Berlin</button><button type="button" data-office="America/Denver" aria-pressed="false">Denver</button></div>
+          </div>
+          <div class="room-grid">
+            {% for room in rooms %}
+            <button class="room-card room-{{ loop.index }}{% if loop.first %} selected{% endif %}" type="button" data-room="{{ room.id }}" data-timezone="{{ room.timezone }}" aria-pressed="{{ 'true' if loop.first else 'false' }}" aria-label="Select {{ room.name }}, {{ room.capacity }} seats, {{ 'Berlin' if room.timezone == 'Europe/Berlin' else 'Denver' }}">
+              <span class="room-top"><span class="office-label">{{ 'BERLIN' if room.timezone == 'Europe/Berlin' else 'DENVER' }}</span><span class="selection-mark" aria-hidden="true">{% if loop.first %}✓{% else %}↗{% endif %}</span></span>
+              <span class="room-sketch" aria-hidden="true"><span class="table-shape"></span><span class="plant">✳</span><span class="window-line"></span></span>
+              <span class="room-name">{{ room.name }}</span><span class="room-bottom"><span>{{ room.capacity }} seats <span class="separator">/</span> Room {{ room.id }}</span><span class="room-cta">Choose room ↗</span></span>
+            </button>
+            {% endfor %}
+          </div>
+        </section>
+        <section class="schedule panel" aria-labelledby="schedule-heading">
+          <div class="section-heading"><div><p class="eyebrow">02 / SEE WHAT’S ON</p><h2 id="schedule-heading">On the calendar</h2></div><label class="date-control"><span class="sr-only">Calendar date</span><input id="calendar-date" type="date" required></label></div>
+          <p class="muted small">Active bookings · Each time is local to its room · Office filter applies</p>
+          <div id="booking-list" aria-live="polite"><p class="empty-state">Loading the calendar…</p></div>
+          <button id="more-bookings" class="text-button" type="button" hidden>Load more bookings</button>
+        </section>
+        <section id="series-section" class="series-panel panel" aria-labelledby="series-heading">
+          <div class="section-heading"><div><p class="eyebrow">03 / KEEP THINGS IN SYNC</p><h2 id="series-heading">Recurring series</h2></div><span class="loop-symbol" aria-hidden="true">↻</span></div>
+          <p class="muted small">Plans changed? Free up future dates in one step. Past and ongoing meetings stay put.</p>
+          <div id="series-list" aria-live="polite"><p class="empty-state">Loading your series…</p></div>
+          <button id="more-series" class="text-button" type="button" hidden>Load more series</button>
+        </section>
+      </div>
+      <aside class="booking-panel panel" aria-labelledby="booking-heading">
+        <div class="form-heading"><span class="eyebrow">MAKE IT HAPPEN</span><span class="little-star" aria-hidden="true">✳</span></div>
+        <h2 id="booking-heading">Book a room</h2><p class="muted">A one-off catch-up or your weekly ritual.</p>
+        <form id="booking-form">
+          <fieldset class="booking-type"><legend class="sr-only">Booking type</legend><label><input type="radio" name="kind" value="single" checked><span>One-time</span></label><label><input type="radio" name="kind" value="weekly"><span>↻ Weekly series</span></label></fieldset>
+          <label for="room">Meeting room</label><select id="room" name="room_id" required>{% for room in rooms %}<option value="{{ room.id }}">{{ room.name }} · {{ room.capacity }} seats</option>{% endfor %}</select>
+          <p id="timezone-hint" class="timezone-hint">Europe/Berlin · Room-local time</p>
+          <label for="user">Booked by</label><input id="user" name="user" placeholder="Your name or team" maxlength="100" autocomplete="name" required>
+          <label for="start">Starts</label><input id="start" name="start" type="datetime-local" step="60" required>
+          <label for="end">Ends</label><input id="end" name="end" type="datetime-local" step="60" required>
+          <div id="recurrence-fields" hidden><label for="repeat-until">Repeat until <span class="muted">(inclusive)</span></label><input id="repeat-until" name="repeat_until" type="date" disabled><p class="field-help">Same weekday and local time, every week. Up to 104 dates.</p></div>
+          <div class="booking-note"><span aria-hidden="true">◷</span><p id="booking-note">Times follow the room’s timezone, even when daylight saving changes.</p></div>
+          <button id="preview-button" class="secondary-button" type="button" hidden>Preview weekly dates <span aria-hidden="true">↗</span></button>
+          <button id="submit-button" class="primary-button" type="submit">Create booking <span aria-hidden="true">→</span></button>
+        </form>
+        <div id="form-feedback" role="status" aria-live="polite" hidden></div>
+        <div id="preview-result" hidden></div>
+        <p class="form-footnote">A little planning. A better day for everyone.</p>
+      </aside>
+    </div>
+    <footer><a class="brand footer-brand" href="#main">roomloop.</a><span>Made for the way we work together.</span><a href="/docs">Explore the API ↗</a></footer>
+  </main>
+  <dialog id="cancel-dialog" aria-labelledby="cancel-title"><h2 id="cancel-title">Cancel future dates?</h2><p id="cancel-description"></p><div class="dialog-actions"><button id="keep-booking" class="secondary-button" type="button">Keep booking</button><button id="confirm-cancel" class="primary-button" type="button">Confirm cancellation</button></div></dialog>
+  <script id="room-data" type="application/json">{{ rooms|tojson }}</script>
+</body>
+</html>
